@@ -1,3 +1,10 @@
 bin/*
 include/*
 lib/*
+/beatmaker.egg-info
+/bin
+/include
+/lib
+/build
+/pygame-1.9.1release
+pygame-1.9.1release.tar.gz
