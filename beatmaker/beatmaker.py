@@ -5,6 +5,7 @@ from optparse import OptionParser
 from pygame.locals import *
 from pygame.midi import *
 from pygame.time import *
+from copy import deepcopy
 
 # main method
 def main():
@@ -29,7 +30,7 @@ def main():
     midi= Output(2)
     midi.set_instrument(0)
     
-    tempo= 160
+    tempo= 140
     beat=60000/(tempo)
     
     sum= 0
@@ -41,6 +42,7 @@ def main():
     events= []
     tick_times= []
     master_tick_times= []
+    repeated_events=[]
     
     pygame.init()
     offset= get_ticks()
@@ -73,13 +75,42 @@ def main():
                     events.append((0,get_ticks()))
                 elif event.type == KEYUP:
                     events.append((1,get_ticks()))
-                if (event.key == K_e):
+                if (event.key == K_e and event.type == KEYDOWN):
                     events= []
                     tick_times= []
+                if (event.key == K_r and event.type == KEYDOWN):
+                    print "Append"
+                    repeated_events.append((events[:],tick_times[:],master_tick_times[:]))
+                    events= []
+                    tick_times= []
+                if (event.key == K_q and event.type == KEYDOWN):
+                    quantatizations= []
+                    statistics= []
+                    print repeated_events
+                    for (levents, ltick_times, lmaster_tick_times) in repeated_events:
+                        quantatizations.append( Quantatize(ltick_times, lmaster_tick_times, levents, 0 ,0, True, False) )
+                    for y, quantatization in enumerate(quantatizations):
+                        for x, note in enumerate(quantatization):
+                            print "X is: ", x
+                            if len(statistics)<=x:
+                                statistics.append({})
+                                statistics[x][note]= 1
+                            else:
+                                if note in statistics[x]:
+                                    statistics[x][note]+=1
+
+                    result= []
+                    for x, note_id in enumerate(statistics):
+                        max= 0
+                        for note in note_id:
+                            if note_id[note]>max:
+                                max= note_id[note]
+                                max_note= note
+                        print "Note ", x, " is ", max_note
+                        result.append(max_note)
+
+                    print result
                 if (event.key == K_ESCAPE):
-                    print events
-                    print tick_times
-                    print Quantatize(tick_times, master_tick_times, events, 0 ,0, True)
                     done = True
                     
 def Quantatize(tick_times, master_tick_times, events, min_length, max_length, continous, full_notes=True):
@@ -123,14 +154,13 @@ def Quantatize(tick_times, master_tick_times, events, min_length, max_length, co
     last_bar_time= 0
     for dir, event_time in events:
         offset= FindClosestTick(event_time, tick_times)
-        bar_time= GetBarTime(event_time, master_tick_times)
         
         print "Event time was ", event_time, "Closest thick is ", offset
         if dir==0: #Down
             on_time= offset
             if continous:
                 if last_on_time!=0:
-                    note_times.append((last_on_time, off_time))
+                    note_times.append((last_on_time, on_time))
                     min=notes[0][1]
                     last_name= ""
                     print on_time-last_on_time
@@ -176,7 +206,7 @@ def GetBarTime(event_time, bar_times):
             min= abs(event_time-bar_time)
             offset= id
 
-    return bar_times[offset]            
+    return bar_times[offset]
 
 # allow use as a module or standalone script
 if __name__ == "__main__":
