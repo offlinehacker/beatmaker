@@ -30,7 +30,7 @@ def main():
     midi= Output(2)
     midi.set_instrument(0)
     
-    tempo= 140
+    tempo= 120
     beat=60000/(tempo)
     
     sum= 0
@@ -88,7 +88,7 @@ def main():
                     statistics= []
                     print repeated_events
                     for (levents, ltick_times, lmaster_tick_times) in repeated_events:
-                        quantatizations.append( Quantatize(ltick_times, lmaster_tick_times, levents, 0 ,0, True, False) )
+                        quantatizations.append( Quantatize(ltick_times, lmaster_tick_times, levents, 0 ,0, True, True) )
                     for y, quantatization in enumerate(quantatizations):
                         for x, note in enumerate(quantatization):
                             print "X is: ", x
@@ -140,9 +140,12 @@ def Quantatize(tick_times, master_tick_times, events, min_length, max_length, co
     #Calculate note lengths based on length of beat
     notes=[("1",avg_beat_len*4),
            ("1*",avg_beat_len*4+avg_beat_len*2),
+           ("1+1/4",avg_beat_len*4+avg_beat_len),
            ("1/2",avg_beat_len*2),
+           ("1/2+1/8",avg_beat_len*2+avg_beat_len/2),
            ("1/2*",avg_beat_len*2+avg_beat_len),
            ("1/4",avg_beat_len),
+           ("1/4+1/16",avg_beat_len+avg_beat_len/4),
            ("1/4*",avg_beat_len+avg_beat_len/2),
            ("1/8",avg_beat_len/2),
            ("1/8*",avg_beat_len/2+avg_beat_len/4),
@@ -169,7 +172,7 @@ def Quantatize(tick_times, master_tick_times, events, min_length, max_length, co
                             if "*" in name:
                                 continue
                         if abs((on_time-last_on_time)-x)<min:
-                            min= abs((on_time-last_on_time)-x)
+                            min= abs((on_time-last_on_time-10)-x)
                             last_name= name
                     last_on_time= 0
                     found_notes.append(last_name)
