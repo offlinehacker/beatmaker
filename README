@@ -1,7 +1,7 @@
 **Beatmaker**
 Make your beats simply with your keyboard.
 
-Homepage: http://code.offlinehacker.net/beatmaker
+Homepage: http://code.offlinehacker.net/projects/beatmaker
 Install:  First install pygame with support for midi, install timidity and run timitidty server, i recomend with realtime priority and io class
 Usage:    python beatmaker.py 
           Hear the drums and press any keys. Press ESC to quit and see what you've done.
