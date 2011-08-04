@@ -8,3 +8,4 @@ lib/*
 /build
 /pygame-1.9.1release
 pygame-1.9.1release.tar.gz
+midiutil/
