@@ -6,5 +6,7 @@ Install:  First install midiutil from http://www.emergentmusics.org/software/5-m
 Usage:    python beatmaker.py ( python beatmaker.py --help ) 
           Hear the drums and press any keys to record beat. Press R to store recording, D to erase current recording session and E to erase all recording sessions. Press Q to quantatize and make statistics on last recording sessions and to write to file. ESC to exit.
 TODO:     - Better quantatization algorithm
+          - Support for non continous mode
+          - Nice GUI in pygame
 
 Dunno what's next just started project yesterday, i know it's buggy and i know where bugs so don't post them yet :P
