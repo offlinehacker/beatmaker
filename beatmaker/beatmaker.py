@@ -24,46 +24,64 @@ def main():
 
     print "Usage: E to erase whole recording session, D to delete only current session, R to store current session, \
 Q to quantatize and write out and ESC to quit."
-    
+
     pygame.display.init()
     pygame.midi.init()
-    
+    pygame.font.init()
+
     screen = pygame.display.set_mode((640, 480))
-    pygame.display.set_caption('Pygame Caption')
+    pygame.display.set_caption('beatmaker')
     pygame.mouse.set_visible(0)
-    
+    background = pygame.Surface((screen.get_width(), screen.get_height()))
+
+    beat_colors=[(255,255,0),(255,255,0),(255,255,0),(0,255,255)]
+    myfont = pygame.font.SysFont("Comic Sans MS", 400)
+    beat_label = myfont.render("1", 1, beat_colors[0])
+    screen.blit(beat_label, (200, 0))
+
+    pygame.display.flip()
+
     midi= Output(2)
-    midi.set_instrument(0)
-    
     tempo= options.bpm
     beat=60000/tempo
-    
+
     sum= 0
     on= True
-    
     done = False
+    last_num=0
     num=0
-    
+
+    latency= 200
+
     events= []
     tick_times= []
     master_tick_times= []
     repeated_events=[]
     write_id= 0
-    
+
     pygame.init()
     offset= get_ticks()
 
     #Main loop
     while not done:
-        #Handling of metronome
         time=get_ticks()-offset
-        if(abs(time-beat/2)<2 and not on):
+
+        #Handling of graphics
+        if(num!=last_num and on and on_time+latency==get_ticks()):
+            screen.blit(background, (0,0))
+            beat_label = myfont.render(str(num), 1, beat_colors[num-1])
+            screen.blit(beat_label, (200, 0))
+            pygame.display.flip()
+
+        #Handling of metronome
+        if(abs(time-beat/2)<10 and not on):
             if num==4:
                 midi.note_off(46,channel=9)
-            else: 
+            else:
                 midi.note_off(50,channel=9)
             on= True
-        elif(abs(time-beat)<2 and on):
+            on_time= get_ticks()
+        elif(abs(time-beat)<10 and on):
             tick= get_ticks()
             if num==4:
                 midi.note_on(46,127,9)
@@ -74,6 +92,7 @@ Q to quantatize and write out and ESC to quit."
             tick_times.append(tick)
             offset=tick
             on= False
+            last_num= num
             num+= 1
 
         #Handling of key events
@@ -141,7 +160,7 @@ Q to quantatize and write out and ESC to quit."
                 #On exit
                 if (event.key == K_ESCAPE):
                     done = True
-                    
+
 def Quantatize(tick_times, beat_times, events, min_length, max_length, continous, full_notes=True):
     offset= 0
     on_time= 0
@@ -225,7 +244,6 @@ def Quantatize(tick_times, beat_times, events, min_length, max_length, continous
                         min= abs((off_time-on_time)-time)
                         last_note= note
                 found_notes.append(last_note)
-                                   
     return found_notes
 
 def WriteMidi(notes, tempo, file):
@@ -242,14 +260,13 @@ def WriteMidi(notes, tempo, file):
     binfile = open(file, 'wb')
     MyMIDI.writeFile(binfile)
     binfile.close()
-                
+
 def FindClosestTick(event_time, tick_times):
     min= 100000
     for id,tick_time in enumerate(tick_times):
         if abs(event_time-tick_time)<min:
             min= abs(event_time-tick_time)
             offset= id
-            
     return tick_times[offset]
 
 def GetBarTime(event_time, bar_times):
