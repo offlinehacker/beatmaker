@@ -20,6 +20,9 @@ def main():
                   action="store_true", help="Only full notes", default=False)
     parser.add_option("-o", "--output", dest="output",
                   help="Prefix of output file", type="string", default="beatmaker_")
+    parser.add_option("-l", "--latency", dest="latency",
+                  help="Output midi latency, midi and graphics must be in synch.", type="int", default=200)
+
     (options, args) = parser.parse_args()
 
     print "Usage: E to erase whole recording session, D to delete only current session, R to store current session, \
@@ -51,7 +54,7 @@ Q to quantatize and write out and ESC to quit."
     last_num=0
     num=0
 
-    latency= 200
+    latency= options.latency
 
     events= []
     tick_times= []
@@ -74,21 +77,24 @@ Q to quantatize and write out and ESC to quit."
             pygame.display.flip()
 
         #Handling of metronome
-        if(abs(time-beat/2)<10 and not on):
+        if(abs(time-beat/3)<5 and not on):
             if num==4:
-                midi.note_off(46,channel=9)
+                midi.note_off(44,channel=9)
+                pass
             else:
                 midi.note_off(50,channel=9)
+                pass
             on= True
             on_time= get_ticks()
-        elif(abs(time-beat)<10 and on):
+        elif(abs(time-beat)<5 and on):
             tick= get_ticks()
             if num==4:
-                midi.note_on(46,127,9)
+                midi.note_on(44,127,9)
                 num=0
                 master_tick_times.append(tick)
             else:
                 midi.note_on(50,127,9)
+                pass
             tick_times.append(tick)
             offset=tick
             on= False
@@ -98,27 +104,28 @@ Q to quantatize and write out and ESC to quit."
         #Handling of key events
         for event in pygame.event.get():
             if (event.type == KEYUP) or (event.type == KEYDOWN):
-                #On any key press we append note direction and time to events
+                #On any key press we append note direction and time to events,
+                #we should also take latency in account.
                 if event.type == KEYDOWN:
-                    events.append((0,get_ticks()))
+                    events.append((0,get_ticks()-latency))
                 elif event.type == KEYUP:
-                    events.append((1,get_ticks()))
+                    events.append((1,get_ticks()-latency))
 
                 #Erase whole progression
                 if (event.key == K_e and event.type == KEYDOWN):
                     repeated_events= []
                 #Delete current progression
-                if (event.key == K_d or event.key == K_e and event.type == KEYDOWN):
+                elif (event.key == K_d or event.key == K_e and event.type == KEYDOWN):
                     events= []
                     tick_times= []
                 #Save current progression to recording
-                if (event.key == K_r and event.type == KEYDOWN):
+                elif (event.key == K_r and event.type == KEYDOWN):
                     print "Append"
                     repeated_events.append((events[:],tick_times[:],master_tick_times[:]))
                     events= []
                     tick_times= []
                 #Quantatize and save to output
-                if (event.key == K_q and event.type == KEYDOWN):
+                elif (event.key == K_q and event.type == KEYDOWN):
                     quantatizations= []
                     statistics= []
 
@@ -158,7 +165,7 @@ Q to quantatize and write out and ESC to quit."
                     WriteMidi(result, options.bpm, options.output+str(write_id)+".mid")
                     write_id+= 1
                 #On exit
-                if (event.key == K_ESCAPE):
+                elif (event.key == K_ESCAPE):
                     done = True
 
 def Quantatize(tick_times, beat_times, events, min_length, max_length, continous, full_notes=True):
